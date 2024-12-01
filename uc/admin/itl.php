@@ -87,41 +87,70 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php
+                    <?php
                         include '../config/config.php';
 
                         $limit = 5;
 
+                        // Get the total number of rows in the employee table
                         $totalResult = $conn->query("SELECT COUNT(*) AS total FROM employee");
                         $totalRows = $totalResult->fetch_assoc()['total'];
                         $totalPages = ceil($totalRows / $limit);
 
+                        // Get the current page number
                         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-                        $page = max($page, 1); 
-                       
+                        $page = max($page, 1);
+
+                        // If the current page is greater than the total number of pages, redirect to the last page
+                        if ($page > $totalPages) {
+                            header("Location: ?page=" . $totalPages);
+                            exit;
+                        }
+
+                        // Calculate the offset for the query
                         $offset = ($page - 1) * $limit;
 
-                        $sql = "SELECT e.employeeId, e.firstName, e.middleName, e.lastName, u.filePath 
-                            FROM employee e
-                            LEFT JOIN uploaded_files u ON e.employeeId = u.employeeId
-                            WHERE e.role = 'Faculty' 
-                            LIMIT $limit OFFSET $offset";
+                        // SQL query to get employee data and the associated ITL file
+                        $sql = "SELECT e.employeeId, e.firstName, e.middleName, e.lastName, f.file, f.filename, f.designation_itl, r.role_Name 
+                                FROM employee e 
+                                LEFT JOIN faculty_load f ON e.employeeId = f.employeeId 
+                                JOIN roles_employee re ON e.employeeId = re.employeeId
+                                JOIN roles r ON re.role_Id = r.role_Id
+                                WHERE r.role_Name = 'Faculty' 
+                                LIMIT $limit OFFSET $offset";
 
+                        // Execute the query
                         $result = $conn->query($sql);
 
+                        // Check if there are results
                         if ($result->num_rows > 0) {
+                            // Loop through each row of the result set
                             while ($row = $result->fetch_assoc()) {
                                 $fullName = $row['firstName'] . ' ' . $row['middleName'] . ' ' . $row['lastName'];
+                                
                                 echo '<tr>
                                         <td>' . $row['employeeId'] . '</td>
                                         <td>' . $fullName . '</td>
-                                        <td></td>
+                                        <td>' . $row['designation_itl'] . '</td>
                                         <td>';
 
-                                if (!empty($row['filePath'] )&& file_exists($row['filePath'])) {
-                                    echo '<a href="../controller/view-file.php?employeeId=' . $row['employeeId'] . '" style="color: blue; text-decoration: underline;">itl.file</a>';
+                                // Check if the file is available
+                                if (!empty($row['file'])) {
+                                    // Check if the file is an image
+                                    $filename = $row['filename'];
+                                    $fileInfo = finfo_open(FILEINFO_MIME_TYPE);
+                                    $fileMimeType = finfo_buffer($fileInfo, $row['file']);
+                                    finfo_close($fileInfo);
+
+                                    if (strpos($fileMimeType, 'image/') === 0) {
+                                        // If it's an image, display it
+                                        echo '<img src="data:' . $fileMimeType . ';base64,' . base64_encode($row['file']) . '" alt="ITL File" style="max-width: 100px; height: auto;">';
+                                    } else {
+                                        // Otherwise, provide a download link
+                                        echo '<a href="../controller/view-file.php?employeeId=' . $row['employeeId'] . '" style="color: blue; text-decoration: underline;" target="_blank">' . htmlspecialchars($filename) . '</a>';
+                                    }
                                 } else {
-                                    echo 'No file';
+                                    echo 'No file available';
                                 }
 
                                 echo '</td>
@@ -133,38 +162,42 @@
                                             <a href="../controller/delete_file.php?employeeId=' . $row['employeeId'] . '" onclick="return confirm(\'Are you sure you want to delete this file?\')">
                                                 <img src="../images/delete-icon.png" alt="Delete" style="width: 20px;">
                                             </a>
-
                                         </td>
                                     </tr>';
                             }
                         } else {
-                            echo '<tr><td colspan="7">No faculty members found.</td></tr>';
+                            echo '<tr><td colspan="5">No faculty members found.</td></tr>';
                         }
 
                         $conn->close();
                         ?>
-                    </tbody>
-                </table>
-                <div class="pagination" id="pagination">
-                <?php
-                    if ($totalPages > 1) {
-                        // First and Previous buttons
-                        echo '<a href="?page=1" class="pagination-button">&laquo;</a>';
-                        $prevPage = max(1, $page - 1);
-                        echo '<a href="?page=' . $prevPage . '" class="pagination-button">&lsaquo;</a>';
 
-                        // Numbered page links
-                        for ($i = 1; $i <= $totalPages; $i++) {
-                            $activeClass = ($i == $page) ? 'active' : '';
-                            echo '<a href="?page=' . $i . '" class="pagination-button ' . $activeClass . '">' . $i . '</a>';
-                        }
+                        </tbody>
 
-                        // Next and Last buttons
-                        $nextPage = min($totalPages, $page + 1);
-                        echo '<a href="?page=' . $nextPage . '" class="pagination-button">&rsaquo;</a>';
-                        echo '<a href="?page=' . $totalPages . '" class="pagination-button">&raquo;</a>';
-                    }
-                ?>
+                        </table>
+                        <div class="pagination" id="pagination">
+                            <?php
+                                if ($totalPages > 1) {
+                                    // First and Previous buttons
+                                    echo '<a href="?page=1" class="pagination-button">&laquo;</a>';
+                                    $prevPage = max(1, $page - 1);
+                                    echo '<a href="?page=' . $prevPage . '" class="pagination-button">&lsaquo;</a>';
+
+                                    // Numbered page links
+                                    for ($i = 1; $i <= $totalPages; $i++) {
+                                        $activeClass = ($i == $page) ? 'active' : '';
+                                        echo '<a href="?page=' . $i . '" class="pagination-button ' . $activeClass . '">' . $i . '</a>';
+                                    }
+
+                                    // Next and Last buttons
+                                    $nextPage = min($totalPages, $page + 1);
+                                    echo '<a href="?page=' . $nextPage . '" class="pagination-button">&rsaquo;</a>';
+                                    echo '<a href="?page=' . $totalPages . '" class="pagination-button">&raquo;</a>';
+                                }
+                            ?>
+                        </div>
+
+
                </div>
             </div>
             <!-- Modal -->
@@ -172,7 +205,7 @@
                 <div class="modal-content">
                     <span class="close-btn">&times;</span>
                     <h2>Upload ITL file</h2>
-                    <form id="fillUpForm" action="../controller/process_form.php" method="POST" enctype="multipart/form-data">
+                    <form id="fillUpForm" action="../extract/itl_extract.php" method="POST" enctype="multipart/form-data">
                         <label for="fullName">Name</label>
                         <input type="text" id="fullName" name="fullName" readonly>
 
@@ -195,13 +228,13 @@
                         <label for="academicSemester">Academic Semester:</label>
                         <select id="academicSemester" name="academicSemester" >
                             <option value="">Select Semester</option>
-                            <option value="First Semester">First Semester</option>
-                            <option value="Second Semester">Second Semester</option>
+                            <option value="1st Semester">First Semester</option>
+                            <option value="2nd Semester">Second Semester</option>
                             <option value="Summer Semester">Summer Semester</option>
                         </select>
 
                         <label for="uploadFile">Upload File:</label>
-                        <input type="file" id="uploadFile" name="uploadFile" accept=".pdf,.docx,.txt" required>
+                        <input type="file" id="uploadFile" name="uploadFile" accept=".xlsx,.xls" required>
 
                         <button type="submit">Submit</button>
                     </form>

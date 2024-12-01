@@ -1,12 +1,12 @@
 <?php
-// Include Composer's autoload for PhpSpreadsheet
+
 require 'vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 // Database connection settings
 $host = 'localhost';
-$dbname = 'faculty';
+$dbname = 'ucheque';
 $user = 'root';
 $password = '';
 
@@ -15,9 +15,32 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    if (isset($_FILES['excelFile'])) {
-        $fileTmpPath = $_FILES['excelFile']['tmp_name'];
-        $fileName = $_FILES['excelFile']['name'];
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['uploadFile'])) {
+        // Get form data
+        $fullName = $_POST['fullName'];  // Full name of the employee
+        $academicYear = $_POST['academicYear'];
+        $academicSemester = $_POST['academicSemester'];
+
+        // Fetch employeeId based on the fullName (Concatenate firstName, middleName, and lastName in the query)
+        $stmt = $pdo->prepare("
+            SELECT employeeId 
+            FROM employee 
+            WHERE CONCAT(firstName, ' ', middleName, ' ', lastName) = :fullName 
+            LIMIT 1
+        ");
+        $stmt->execute([':fullName' => $fullName]);
+        $employee = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($employee) {
+            $employeeId = $employee['employeeId']; // Employee ID found, proceed with file processing
+        } else {
+            echo "Employee not found in the database.";
+            exit;
+        }
+
+        // File processing
+        $fileTmpPath = $_FILES['uploadFile']['tmp_name'];
+        $fileName = $_FILES['uploadFile']['name'];
         $fileContent = file_get_contents($fileTmpPath);
 
         // Load the Excel file
@@ -40,27 +63,31 @@ try {
                     $designationLoadReleased = $row[9] ?? null; // Assuming the value is in the 10th column
                 }
                 if (is_string($cell) && stripos($cell, 'Designation:') !== false) {
-                    $designation_itl = $row[11] ?? null; // Assuming the value is in the 10th column
+                    $designation_itl = $row[11] ?? null; // Assuming the value is in the 12th column
                 }
-                
             }
         }
 
+        // Ensure the required data was found
         if ($facultyCredit !== null && $designationLoadReleased !== null) {
             // Insert extracted values and file into the database
             $stmt = $pdo->prepare("
-                INSERT INTO faculty_load (faculty_credit, designation_load_released,designation_itl, file, filename) 
-                VALUES (:facultyCredit, :designationLoadReleased,:designation_itl, :file, :filename)
+                INSERT INTO faculty_load (faculty_credit, designation_load_released, designation_itl, academic_year, academic_sem, employeeId, file, filename) 
+                VALUES (:facultyCredit, :designationLoadReleased, :designation_itl, :academicYear, :academicSemester, :employeeId, :file, :filename)
             ");
             $stmt->execute([
-                ':designation_itl' => $designation_itl,
                 ':facultyCredit' => $facultyCredit,
                 ':designationLoadReleased' => $designationLoadReleased,
+                ':designation_itl' => $designation_itl,
+                ':academicYear' => $academicYear,
+                ':academicSemester' => $academicSemester,
+                ':employeeId' => $employeeId,  // Ensure employeeId is correctly linked
                 ':file' => $fileContent,
                 ':filename' => $fileName
             ]);
 
-            echo "Data and file successfully inserted into the database.";
+            header('Location: ../admin/itl.php'); // Assuming 'itl.php' is the form page
+
         } else {
             echo "Could not find the required data in the Excel file.";
         }
@@ -68,20 +95,3 @@ try {
 } catch (Exception $e) {
     echo "Error: " . $e->getMessage();
 }
-?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Excel File</title>
-</head>
-<body>
-    <h1>Upload Excel File</h1>
-    <form action="" method="post" enctype="multipart/form-data">
-        <input type="file" name="excelFile" accept=".xls,.xlsx" required>
-        <button type="submit">Upload and Store</button>
-    </form>
-</body>
-</html>

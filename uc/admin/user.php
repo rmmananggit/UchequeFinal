@@ -126,44 +126,60 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php
-                            include '../config/config.php';
+                    <?php
+                      include '../config/config.php';
 
-                            $limit = 10;
+                      $limit = 10;
 
-                            $totalResult = $conn->query("SELECT COUNT(*) AS total FROM employee");
-                            $totalRows = $totalResult->fetch_assoc()['total'];
-                            $totalPages = ceil($totalRows / $limit);
+                      // Get total number of employees to calculate pagination
+                      $totalResult = $conn->query("SELECT COUNT(*) AS total FROM employee");
+                      if (!$totalResult) {
+                          die("Error in query: " . $conn->error); // Catch and display error if the query fails
+                      }
 
-                            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-                            $page = max($page, 1); 
-                           
-                            $offset = ($page - 1) * $limit;
+                      $totalRows = $totalResult->fetch_assoc()['total'];
+                      $totalPages = ceil($totalRows / $limit);
 
-                           
-                            $sql = "SELECT employeeId, firstName, middleName, lastName, emailAddress, phoneNumber, role, userStatus AS status FROM employee LIMIT $limit OFFSET $offset";
-                            $result = $conn->query($sql);
+                      $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+                      $page = max($page, 1);
 
-                     
-                            if ($result->num_rows > 0) {
-                                while ($row = $result->fetch_assoc()) {
-                                    $fullName = trim($row['firstName'] . ' ' . $row['middleName'] . ' ' . $row['lastName']);
-                                    echo '<tr data-role="' . $row['role'] . '">
-                                            <td>' . $row['employeeId'] . '</td>
-                                            <td>' . $fullName . '</td>
-                                            <td>' . $row['emailAddress'] . '</td>
-                                            <td>' . $row['phoneNumber'] . '</td>
-                                            <td><span class="status">' . $row['role'] . '</span></td>
-                                            <td><span class="status">' . $row['status'] . '</span></td>
-                                            <td><a href="edit-act.php?employee_id=' . $row['employeeId'] . '" class="action">Edit</a>
-                                                <a href="#1" class="action">Archive</a></td>
-                                          </tr>';
-                                }
-                            } else {
-                                echo '<tr><td colspan="7">No users found.</td></tr>';
-                            }
-                            $conn->close();
-                        ?>
+                      $offset = ($page - 1) * $limit;
+
+                      // Query to fetch employee data and their roles
+                      $query = "SELECT e.employeeId, e.firstName, e.middleName, e.lastName, e.emailAddress, e.phoneNumber, e.userStatus, GROUP_CONCAT(r.role_Name ORDER BY r.role_Name ASC) AS roles
+                                FROM employee e
+                                JOIN roles_employee re ON e.employeeId = re.employeeId
+                                JOIN roles r ON re.role_Id = r.role_Id
+                                GROUP BY e.employeeId, e.firstName, e.middleName, e.lastName
+                                LIMIT $limit OFFSET $offset"; // Add LIMIT and OFFSET for pagination
+
+                      $result = $conn->query($query);
+                      if (!$result) {
+                          die("Error in query: " . $conn->error); // Catch and display error if the query fails
+                      }
+
+                      if ($result->num_rows > 0) {
+                          // Loop through the results and display them
+                          while ($row = $result->fetch_assoc()) {
+                              $fullName = trim($row['firstName'] . ' ' . $row['middleName'] . ' ' . $row['lastName']);
+                              echo '<tr data-role="' . $row['employeeId'] . '">
+                                      <td>' . $row['employeeId'] . '</td>
+                                      <td>' . $fullName . '</td>
+                                      <td>' . $row['emailAddress'] . '</td>
+                                      <td>' . $row['phoneNumber'] . '</td>
+                                      <td><span class="status">' . $row['roles'] . '</span></td>
+                                     <td><span class="status">' . $row['userStatus'] . '</span></td>
+                                      <td><a href="edit-act.php?employee_id=' . $row['employeeId'] . '" class="action">Edit</a>
+                                          <a href="#1" class="action">Archive</a></td>
+                                    </tr>';
+                          }
+                      } else {
+                          echo '<tr><td colspan="7">No users found.</td></tr>';
+                      }
+
+                      $conn->close();
+                      ?>
+
                     </tbody>
                 </table>
 

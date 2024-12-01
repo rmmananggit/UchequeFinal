@@ -3,7 +3,7 @@
 $host = 'localhost';
 $user = 'root';
 $password = '';
-$database = 'faculty1';
+$database = 'ucheque';
 
 $conn = new mysqli($host, $user, $password, $database);
 

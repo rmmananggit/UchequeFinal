@@ -1,35 +1,38 @@
 <?php
-include("../config/config.php");
-session_start();
+// Include database connection
+include_once('../config/config.php');
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// Check if the form is submitted
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Get form data
     $employeeId = $_POST['employeeId'];
     $firstName = $_POST['firstName'];
     $middleName = $_POST['middleName'];
     $lastName = $_POST['lastName'];
-    $phoneNumber = $_POST['phoneNumber'];
     $emailAddress = $_POST['emailAddress'];
-    $role = $_POST['role'];
+    $phoneNumber = $_POST['phoneNumber'];
+    $roleId = $_POST['role'];  // The role_id selected by the user
 
-    // Generate a default password based on employeeId and lastName
-    $password = $employeeId . '@' . $lastName;
+    // Insert employee data into the `employee` table
+    $query = "INSERT INTO employee (employeeId, firstName, middleName, lastName, emailAddress, phoneNumber) 
+              VALUES (?, ?, ?, ?, ?, ?)";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("ssssss", $employeeId, $firstName, $middleName, $lastName, $emailAddress, $phoneNumber);
 
-    // Hash the default password
-    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-    // Use prepared statements to prevent SQL injection
-    $stmt = $conn->prepare("INSERT INTO `employee` (`employeeId`, `firstName`, `middleName`, `lastName`, `password`, `emailAddress`, `role`, `phoneNumber`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssssss", $employeeId, $firstName, $middleName, $lastName, $hashedPassword, $emailAddress, $role, $phoneNumber);
-
-    if ($stmt->execute()) {
-        $_SESSION['status'] = "User has been added successfully!";
-        $_SESSION['status_code'] = "success";
-        header('Location: ../admin/user.php');
-        exit(0);
-    } else {
-        echo "Error: " . $stmt->error;
+    if (!$stmt->execute()) {
+        die('Error executing employee insertion query: ' . $stmt->error);
     }
-    $stmt->close();
+
+    // Insert the role for the employee into the `roles_employee` table
+    $rolesEmployeeQuery = "INSERT INTO roles_employee (employeeId, role_Id) VALUES (?, ?)";
+    $rolesEmployeeStmt = $conn->prepare($rolesEmployeeQuery);
+    $rolesEmployeeStmt->bind_param("ii", $employeeId, $roleId);
+
+    if ($rolesEmployeeStmt->execute()) {
+        header("Location: ../admin/user.php");
+    } else {
+        echo "Error assigning role to employee: " . $rolesEmployeeStmt->error;
+    }
 }
-$conn->close();
+
 ?>
