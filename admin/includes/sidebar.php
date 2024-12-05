@@ -1,6 +1,6 @@
 <body>
         <div class="sidebar">
-          <div class="logo"><img src="../assets/images/people.jpg" alt=""></div>
+          <div class="logo"><img src="./assets/images/logoall-light.png" alt=""></div>
           <ul class="menu">
             <li><a href="index.php"><i class="bx bxs-dashboard"></i><span>dashboard</span></a></li>
             <li><a href="user.php"><i class="bx bxs-group"></i><span>user management</span></a></li>

@@ -18,11 +18,11 @@
 
 <body>
     <div class="login">
-        <img src="images/login-bg.jpg" alt="login image" class="login__img">
+        <img src="./admin/assets/images/login-bg.jpg" alt="login image" class="login__img">
 
         <form action="./controller/login_process.php" method="POST" class="login__form" autocomplete="off">
             <div class="logo--cont">
-                <img src="images/logo-dark.png" alt="" />
+                <img src="./admin/assets/images/logo-dark.png" alt="" />
             </div>
 
             <h1 class="login__title">Log In</h1>

@@ -66,19 +66,19 @@
     margin: 1px 0;
     padding: 10px 10px;
 }
-.edit-profile{
+.main-content .edit-profile{
     display: flex;
     flex-direction: row;
     border-bottom: 1px solid black;
 }
-.edit-profile a {
+.main-content .edit-profile button.tablinks{
     padding: 10px 10px;
     color: var(--h1);
     font-weight: bold;
     text-decoration: none;
 }
 
-.edit-profile a:hover {
+.main-content .edit-profile button.tablinks:hover {
   border-radius: 5px;
     color: var(--num);
 }
@@ -139,3 +139,4 @@ input[type="text"]:focus, input[type="date"]:focus {
     border-color: #007BFF;
     outline: none;
 }
+
