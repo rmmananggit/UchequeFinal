@@ -47,11 +47,11 @@ if (count($user_roles) === 1) {
 
 <body>
     <div class="login">
-        <img src="images/login-bg.jpg" alt="login image" class="login__img">
+        <img src="./admin/assets/images/login-bg.jpg" alt="login image" class="login__img">
 
         <form method="POST" action="./controller/role_redirect.php" class="login__form">
             <div class="logo--cont">
-                <img src="images/logo-dark.png" alt="" />
+                <img src="./admin/assets/images/logo-dark.png" alt="" />
             </div>
 
             <h1 class="login__title">Login as</h1>
