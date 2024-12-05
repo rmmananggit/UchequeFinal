@@ -1,8 +1,17 @@
 <div class="main--content">
             <div class="header--wrapper">
-              <div class="header--title">
-                <h2>Dashboard</h2>
-              </div>
+            <div class="header--title">
+                <h2>
+                    <?php 
+                    if (basename($_SERVER['PHP_SELF']) == 'profile.php') {
+                        echo 'Profile'; 
+                    } else {
+                        echo 'Dashboard'; 
+                    }
+                    ?>
+                </h2>
+            </div>
+
 
               <?php
               $userId = $_SESSION['auth_user']['userId'];

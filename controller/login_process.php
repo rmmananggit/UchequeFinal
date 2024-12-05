@@ -34,8 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             $roles[] = $row['roleName']; // Collect all roles
         }
 
-        // Verify the password (direct comparison, no hashing)
-        if ($password === $userData['password']) { // Plain-text comparison
+        if ($password === $userData['password']) { 
             $_SESSION['auth'] = true;
             $_SESSION['userstatus'] = $userData['status'];
             $_SESSION['roles'] = $roles;
@@ -45,14 +44,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                 'email' => $userData['emailAddress']
             ];
 
-            // Redirect based on user status
             if ($userData['status'] == 'Inactive') {
                 $_SESSION['status'] = "Your account is inactive!";
                 $_SESSION['status_code'] = "warning";
                 header("Location: ../index.php");
                 exit();
             } elseif ($userData['status'] == 'Active') {
-                $_SESSION['status'] = "Welcome " . $userData['firstName'] . "!";
+                $_SESSION['status'] = "Welcome " . $userData['firstName'] . ' ' . $userData['lastName'] . "!";
                 $_SESSION['status_code'] = "success";
                 header("Location: ../loginas.php");
                 exit();

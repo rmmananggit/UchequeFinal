@@ -1,21 +1,19 @@
 <?php
 session_start();
 
-// Fetch roles from session
 $user_roles = isset($_SESSION['roles']) ? $_SESSION['roles'] : [];
 
-// Redirect back to login if no roles are set
 if (empty($user_roles)) {
     header("Location: ../login.php");
     exit();
 }
 
-// Check if there's only one role and redirect accordingly
 if (count($user_roles) === 1) {
     $single_role = $user_roles[0];
-    // Simulate the role selection and redirect
     switch ($single_role) {
         case 'Admin':
+            $_SESSION['status'] = "Welcome " . $_SESSION['auth_user']['firstName'] . ' ' . $_SESSION['auth_user']['lastName'];
+            $_SESSION['status_code'] = "success";
             header("Location: ./admin/index.php");
             break;
         case 'Hr':

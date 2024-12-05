@@ -5,11 +5,6 @@ include('./includes/sidebar.php');
 include('./includes/topbar.php');
 ?>
 
-
-            <div class="card--container">
-              <h3 class="main--title"> Welcome back, Admin</h3>
-          </div><br>
-
             <div class="card--container">
               <h3 class="main--title"> Accounts </h3>
 
