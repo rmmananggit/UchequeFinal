@@ -20,7 +20,7 @@
     <div class="login">
         <img src="images/login-bg.jpg" alt="login image" class="login__img">
 
-        <form action="./controller/login_process.php" method="POST" class="login__form">
+        <form action="./controller/login_process.php" method="POST" class="login__form" autocomplete="off">
             <div class="logo--cont">
                 <img src="images/logo-dark.png" alt="" />
             </div>
@@ -31,7 +31,7 @@
                 <div class="login__box">
                     <i class="ri-user-3-line login__icon"></i>
                     <div class="login__box-input">
-                        <input type="email" name="email" required class="login__input" id="login-email" placeholder="">
+                        <input type="email" name="emailAddress" required class="login__input" id="login-email" placeholder="">
                         <label for="login-email" class="login__label">Email</label>
                     </div>
                 </div>
