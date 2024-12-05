@@ -18,7 +18,7 @@
 </head>
     <body>
         <div class="sidebar">
-          <div class="logo"><img src="../images/logoall-light.png" alt=""></div>
+          <div class="logo"><img src="./assets/images/logoall-light.png" alt=""></div>
             <ul class="menu">
                 <li>
                     <a href="index.php">
@@ -141,19 +141,23 @@
                             $offset = ($page - 1) * $limit;
 
                            
-                            $sql = "SELECT employeeId, firstName, middleName, lastName, emailAddress, phoneNumber, role, userStatus AS status FROM employee LIMIT $limit OFFSET $offset";
+                            $sql = "SELECT 
+                              e.userId, e.employeeId, e.fistName, e.lastName, e.middleName, e.lastName, e.emailAddress,
+                              e.phoneNumber, e.`status`, er.userId, er.role_id, r.`name`
+                            FROM employee, employee_role, role
+                            LIMIT $limit OFFSET $offset";
                             $result = $conn->query($sql);
 
                      
                             if ($result->num_rows > 0) {
                                 while ($row = $result->fetch_assoc()) {
                                     $fullName = trim($row['firstName'] . ' ' . $row['middleName'] . ' ' . $row['lastName']);
-                                    echo '<tr data-role="' . $row['role'] . '">
+                                    echo '<tr data-role="' . $row['role_id'] . '">
                                             <td>' . $row['employeeId'] . '</td>
                                             <td>' . $fullName . '</td>
                                             <td>' . $row['emailAddress'] . '</td>
                                             <td>' . $row['phoneNumber'] . '</td>
-                                            <td><span class="status">' . $row['role'] . '</span></td>
+                                            <td><span class="status">' . $row['name'] . '</span></td>
                                             <td><span class="status">' . $row['status'] . '</span></td>
                                             <td><a href="edit-act.php?employee_id=' . $row['employeeId'] . '" class="action">Edit</a>
                                                 <a href="#1" class="action">Archive</a></td>

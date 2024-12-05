@@ -12,7 +12,7 @@ include('./includes/authentication.php');
 	<!-- My CSS -->
 	<link rel="icon" type="image/png" sizes="96x96" href="../assets/images/logo-dark.png">
 	<link rel="stylesheet" href="../assets/style.css">
-	<link rel="stylesheet" href="../assets/profile.css">
+	<link rel="stylesheet" href="./assets/profile.css">
 	<title>Ucheque</title>
 	
 </head>

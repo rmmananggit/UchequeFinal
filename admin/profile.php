@@ -39,11 +39,11 @@ if ($result && $result->num_rows > 0) {
                 </div>
             </div>
             <div class="main-content">
-            <div class="tab">
-                <button class="tablinks active" onclick="openTab(event, 'profile')">Profile Details</button>
-                <button class="tablinks" onclick="openTab(event, 'edit')">Edit Profile</button>
-                <button class="tablinks" onclick="openTab(event, 'security')">Password & Security</button>
-            </div>
+                <div class="edit-profile">
+                    <button class="tablinks" onclick="openTab(event, 'profile')">Profile Details</button>
+                    <button class="tablinks" onclick="openTab(event, 'edit')">Edit Profile</button>
+                    <button class="tablinks" onclick="openTab(event, 'security')">Password & Security</button>
+                </div>
 
 
                 <div id="profile" class="tabcontent" style="display: block;">
