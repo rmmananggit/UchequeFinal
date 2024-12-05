@@ -1,219 +1,177 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<?php
+include('./includes/authentication.php');
+include('./includes/header.php');
+include('./includes/sidebar.php');
+include('./includes/topbar.php');
+?>
 
-	<!-- Boxicons -->
-	<link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
-	<!-- My CSS -->
-	<link rel="icon" type="image/png" sizes="96x96" href="images/icon.png">
-	<link rel="stylesheet" href="../assets/style.css">
-  <link rel="stylesheet" href="../assets/page.css">
-
-	<title>Ucheque</title>
-	<!-- <script src="calendar.js" type="text/javascript"></script> -->
-
-
-</head>
-    <body>
-        <div class="sidebar">
-          <div class="logo"><img src="../images/logoall-light.png" alt=""></div>
-            <ul class="menu">
-                <li>
-                    <a href="index.php">
-                      <i class="bx bxs-dashboard"></i>
-                      <span>dashboard</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="user.php">
-                      <i class="bx bxs-group"></i>
-                      <span>user management</span>
-                    </a>
-                </li>
-                <li>
-                  <a href="itl.php">
-                    <i class='bx bxs-doughnut-chart'></i>
-                    <span>employee ITL</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="dtr.php">
-                    <i class='bx bxs-time' ></i>
-                    <span>employee DTR</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="reports.php">
-                      <i class='bx bxs-book-alt'></i>
-                    <span>reports</span>
-                  </a>
-                </li>
-                <li class="switch">
-                    <a href="/loginas.php">
-                      <i class='bx bx-code'></i>
-                      <span>switch</span>
-                    </a>
-                </li>
-            </ul>
-           
+<div class="tabular--wrapper">
+    <div class="add">
+        <div class="filter">
+            <form method="GET" action="">
+                <select name="role_filter" onchange="this.form.submit()">
+                    <option value="ALL" selected <?php if (isset($_GET['role_filter']) && $_GET['role_filter'] == 'ALL') echo 'selected';?>>All</option>
+                    <option value="2" <?php if (isset($_GET['role_filter']) && $_GET['role_filter'] == '2') echo 'selected'; ?>>Staff</option>
+                    <option value="3" <?php if (isset($_GET['role_filter']) && $_GET['role_filter'] == '3') echo 'selected'; ?>>Faculty</option>
+                    <option value="4" <?php if (isset($_GET['role_filter']) && $_GET['role_filter'] == '4') echo 'selected'; ?>>HR</option>
+                </select>
+            </form>
         </div>
+        <button class="btn-add" data-bs-toggle="modal" data-bs-target="#importModal">
+            <i class='bx bxs-file-import'></i>
+            <span class="text">Import User</span>
+        </button>
+        <a href="add-user.php" class="btn-add">
+            <i class='bx bxs-user-plus'></i>
+            <span class="text">Add User</span>
+        </a>
+    </div>
 
-        <div class="main--content">
-            <div class="header--wrapper">
-              <div class="header--title">
-                <h2>user management</h2>
-              </div>
-             <div class="user--info">
-              <div class="profile-dropdown">
-                <div onclick="toggle()" class="profile-dropdown-btn">
-                  <div class="profile-img"></div>
-                  <i class="bx bx-chevron-down"></i>
-                </div>
-            
-                <ul class="profile-dropdown-list">
-                  <li class="profile-dropdown-list-item">
-                  <a href="profile.php">
-                    <i class="bx bxs-user"></i>
-                    My Profile
-                  </a>
-                  </li>
-            
-                  <li class="profile-dropdown-list-item">
-                  <a href="../logout.php">
-                    <i class="bx bxs-log-out"></i>
-                    Log out
-                  </a>
-                  </li>
-                </ul>
-                </div>
-             </div>
-              </div>
-              <div class="tabular--wrapper">
-                <div class="add">
-                  <div class="filter">
-                    <select>
-                      <option value="" disabled selected>Select Role</option>
-                      <option value="option1">Staff</option>
-                      <option value="option2">Faculty</option>
-                      <option value="option3">HR</option>
-                    </select>
-                  </div>
-                  <a href="import.php" class="btn-add">
-                    <i class='bx bxs-file-import' ></i>
-                    <span class="text">Import User</span>
-                  </a>
-                  <a href="add-user.php" class="btn-add">
-                    <i class='bx bxs-user-plus'></i>
-                    <span class="text">Add User</span>
-                  </a>
-                  
-                </div>
-                          
-             
-                <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Contact</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                            include '../config/config.php';
-
-                            $limit = 10;
-
-                            $totalResult = $conn->query("SELECT COUNT(*) AS total FROM employee");
-                            $totalRows = $totalResult->fetch_assoc()['total'];
-                            $totalPages = ceil($totalRows / $limit);
-
-                            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-                            $page = max($page, 1); 
-                           
-                            $offset = ($page - 1) * $limit;
-
-                           
-                            $sql = "SELECT employeeId, firstName, middleName, lastName, emailAddress, phoneNumber, role, userStatus AS status FROM employee LIMIT $limit OFFSET $offset";
-                            $result = $conn->query($sql);
-
-                     
-                            if ($result->num_rows > 0) {
-                                while ($row = $result->fetch_assoc()) {
-                                    $fullName = trim($row['firstName'] . ' ' . $row['middleName'] . ' ' . $row['lastName']);
-                                    echo '<tr data-role="' . $row['role'] . '">
-                                            <td>' . $row['employeeId'] . '</td>
-                                            <td>' . $fullName . '</td>
-                                            <td>' . $row['emailAddress'] . '</td>
-                                            <td>' . $row['phoneNumber'] . '</td>
-                                            <td><span class="status">' . $row['role'] . '</span></td>
-                                            <td><span class="status">' . $row['status'] . '</span></td>
-                                            <td><a href="edit-act.php?employee_id=' . $row['employeeId'] . '" class="action">Edit</a>
-                                                <a href="#1" class="action">Archive</a></td>
-                                          </tr>';
-                                }
-                            } else {
-                                echo '<tr><td colspan="7">No users found.</td></tr>';
-                            }
-                            $conn->close();
-                        ?>
-                    </tbody>
-                </table>
-
-               <!-- Pagination Links -->
-               <div class="pagination" id="pagination">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Contact</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
                 <?php
-                    if ($totalPages > 1) {
-                        // First and Previous buttons
-                        echo '<a href="?page=1" class="pagination-button">&laquo;</a>';
-                        $prevPage = max(1, $page - 1);
-                        echo '<a href="?page=' . $prevPage . '" class="pagination-button">&lsaquo;</a>';
+                $limit = 10;
+                $roleFilter = isset($_GET['role_filter']) ? $_GET['role_filter'] : null;
 
-                        // Numbered page links
-                        for ($i = 1; $i <= $totalPages; $i++) {
-                            $activeClass = ($i == $page) ? 'active' : '';
-                            echo '<a href="?page=' . $i . '" class="pagination-button ' . $activeClass . '">' . $i . '</a>';
-                        }
+                if ($roleFilter && $roleFilter != 'ALL') {
+                    $roleCondition = "AND employee.userId IN (
+                        SELECT userId 
+                        FROM employee_role 
+                        WHERE role_id = $roleFilter
+                    )";
+                } else {
+                    $roleCondition = "AND (employee.userId NOT IN (
+                        SELECT userId 
+                        FROM employee_role 
+                        WHERE role_id = 1
+                    ) OR employee.userId NOT IN (
+                        SELECT userId 
+                        FROM employee_role
+                    ))";
+                }
 
-                        // Next and Last buttons
-                        $nextPage = min($totalPages, $page + 1);
-                        echo '<a href="?page=' . $nextPage . '" class="pagination-button">&rsaquo;</a>';
-                        echo '<a href="?page=' . $totalPages . '" class="pagination-button">&raquo;</a>';
+                $totalResult = $con->query("
+                    SELECT COUNT(DISTINCT employee.userId) AS total
+                    FROM employee
+                    LEFT JOIN employee_role ON employee.userId = employee_role.userId
+                    WHERE 1 $roleCondition
+                ");
+                if (!$totalResult) {
+                    die("Error fetching total count: " . $con->error);
+                }
+
+                $totalRows = $totalResult->fetch_assoc()['total'];
+                $totalPages = ceil($totalRows / $limit);
+
+                $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+                $page = max($page, 1);
+                $offset = ($page - 1) * $limit;
+
+                $sql = "
+                    SELECT 
+                        employee.userId, 
+                        employee.employeeId, 
+                        employee.firstName, 
+                        employee.middleName, 
+                        employee.lastName, 
+                        employee.phoneNumber, 
+                        employee.emailAddress, 
+                        GROUP_CONCAT(employee_role.role_id) AS roles, 
+                        employee.status
+                    FROM 
+                        employee
+                    LEFT JOIN 
+                        employee_role ON employee.userId = employee_role.userId
+                    WHERE 
+                        1 $roleCondition
+                    GROUP BY 
+                        employee.userId
+                    LIMIT $limit OFFSET $offset
+                ";
+                $result = $con->query($sql);
+
+                if (!$result) {
+                    die("Error executing query: " . $con->error);
+                }
+
+                if ($result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                        $fullName = trim($row['firstName'] . ' ' . $row['middleName'] . ' ' . $row['lastName']);
+                        echo '<tr>
+                                <td>' . htmlspecialchars($row['userId']) . '</td>
+                                <td>' . htmlspecialchars($fullName) . '</td>
+                                <td>' . htmlspecialchars($row['emailAddress']) . '</td>
+                                <td>' . htmlspecialchars($row['phoneNumber']) . '</td>
+                                <td><span class="status">' . htmlspecialchars($row['roles']) . '</span></td>
+                                <td><span class="status">' . htmlspecialchars($row['status']) . '</span></td>
+                                <td>
+                                    <a href="edit-act.php?employee_id=' . htmlspecialchars($row['userId']) . '" class="action">Edit</a>
+                                    <a href="#1" class="action">Archive</a>
+                                </td>
+                              </tr>';
                     }
+                } else {
+                    echo '<tr><td colspan="7">No users found.</td></tr>';
+                }
                 ?>
-               </div>
-            </div>
+            </tbody>
+        </table>
 
+        <div class="pagination" id="pagination">
+            <?php
+            if ($totalPages > 1) {
+                echo '<a href="?page=1" class="pagination-button">&laquo;</a>';
+                $prevPage = max(1, $page - 1);
+                echo '<a href="?page=' . $prevPage . '" class="pagination-button">&lsaquo;</a>';
 
-            </div>
+                for ($i = 1; $i <= $totalPages; $i++) {
+                    $activeClass = ($i == $page) ? 'active' : '';
+                    echo '<a href="?page=' . $i . '" class="pagination-button ' . $activeClass . '">' . $i . '</a>';
+                }
 
-            
-    </body>
-    <script src="/assets/pagination.js"></script>
+                $nextPage = min($totalPages, $page + 1);
+                echo '<a href="?page=' . $nextPage . '" class="pagination-button">&rsaquo;</a>';
+                echo '<a href="?page=' . $totalPages . '" class="pagination-button">&raquo;</a>';
+            }
+            ?>
+        </div>
+    </div>
+</div>
 
-    
-  <script>
-        
-      let profileDropdownList = document.querySelector(".profile-dropdown-list");
-      let btn = document.querySelector(".profile-dropdown-btn");
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="importModalLabel">Import User Data</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form action="./controller/import-users.php" method="POST" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label for="file" class="form-label">Upload Excel File</label>
+            <input type="file" class="form-control" id="file" name="file" accept=".xlsx" required>
+          </div>
+          <div class="text-end">
+            <button type="submit" class="btn btn-primary">Import Users</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 
-      let classList = profileDropdownList.classList;
-
-      const toggle = () => classList.toggle("active");
-
-      window.addEventListener("click", function (e) {
-      if (!btn.contains(e.target)) classList.remove("active");
-      });
-  </script>
-
-  
-
-
-</html> 
+<?php
+include('./includes/footer.php');
+?>

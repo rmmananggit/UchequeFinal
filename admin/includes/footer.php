@@ -40,7 +40,26 @@
 		if (!btn.contains(e.target)) classList.remove("active");
 		});
 
-		
+		document.addEventListener('DOMContentLoaded', () => {
+    const importButton = document.getElementById('importButton');
+    const importModal = document.getElementById('importModal');
+    const closeButton = importModal.querySelector('.close');
+
+    importButton.addEventListener('click', () => {
+        importModal.style.display = 'block';
+    });
+
+    closeButton.addEventListener('click', () => {
+        importModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (event) => {
+        if (event.target === importModal) {
+            importModal.style.display = 'none';
+        }
+    });
+});
+
 	</script>
 
 </html>
