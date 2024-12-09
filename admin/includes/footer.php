@@ -1,5 +1,5 @@
 </body>
-    <script src="../assets/acad.js" ></script>
+    <script src="./assets/acad.js" ></script>
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 	<?php
