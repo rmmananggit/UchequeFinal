@@ -60,6 +60,22 @@
     });
 });
 
+
+function previewImage(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const imagePreview = document.getElementById('imagePreview');
+            imagePreview.innerHTML = `<img src="${e.target.result}" alt="Image Preview" style="max-width: 200px; max-height: 200px; border-radius: 25px;">`;
+        };
+
+        if (file) {
+            reader.readAsDataURL(file);
+        } else {
+            document.getElementById('imagePreview').innerHTML = '';
+        }
+    }
 	</script>
 
 </html>

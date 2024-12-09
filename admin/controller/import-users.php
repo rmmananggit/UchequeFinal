@@ -1,4 +1,5 @@
 <?php
+session_start();
 require '../../vendor/autoload.php'; // Load PhpSpreadsheet
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
@@ -54,7 +55,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
         $stmt->close();
         $conn->close();
 
-        echo "Data imported successfully.";
+        $_SESSION['status'] = "Data Import Successfully";
+        $_SESSION['status_code'] = "success";
+        header('Location: ../user.php');
+        exit(0);
     } catch (Exception $e) {
         echo "Error: " . $e->getMessage();
     }
