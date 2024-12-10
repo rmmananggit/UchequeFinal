@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['file']) && isset($_PO
                 VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         if ($stmt = $con->prepare($sql)) {
-            $stmt->bind_param("iiiiiss", $userId, $facultyCredit, $designationLoadRelease, $regularHours, $totalOverload, $designated, $filePath);
+            $stmt->bind_param("idiidss", $userId, $facultyCredit, $designationLoadRelease, $regularHours, $totalOverload, $designated, $filePath);
 
             if ($stmt->execute()) {
                 $_SESSION['status'] = "Data Import Successfully";

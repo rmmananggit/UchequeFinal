@@ -8,6 +8,7 @@
             <li><a href="dtr.php"><i class='bx bxs-time'></i><span>employee DTR</span></a></li>
             <li><a href="overload.php"><i class="bx bxs-user-check"></i><span>Overload Monitoring</span></a></li>
             <li><a href="reports.php"><i class='bx bxs-book-alt'></i><span>reports</span></a></li>
+            <li><a href="calendar.php"><i class='bx bxs-calendar'></i><span>calendar</span></a></li>
             <li class="switch"><a href="/loginas.php"><i class='bx bx-code'></i><span>switch</span></a></li>
           </ul>
         </div>

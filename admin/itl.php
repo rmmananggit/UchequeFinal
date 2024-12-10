@@ -7,6 +7,8 @@ include('./includes/topbar.php');
 
 <div class="tabular--wrapper">
 
+<h3 class="main--title">Individual Teacher's Load</h3>
+
 <div class="add">
     <button class="btn-add" data-bs-toggle="modal" data-bs-target="#importModal">
         <i class='bx bxs-file-import'></i>
@@ -32,18 +34,19 @@ include('./includes/topbar.php');
             $page = max($page, 1);
             $offset = ($page - 1) * $limit;
 
-            // Fix: Query to get the total count of rows
+            // Updated total count query
             $totalQuery = "
-                            SELECT COUNT(*) as total
-                            FROM 
-                                employee
-                            INNER JOIN 
-                                employee_role ON employee.userId = employee_role.userId
-                            LEFT JOIN
-                                itl_extracted_data ON employee.userId = itl_extracted_data.userId
-                            WHERE 
-                                employee_role.role_id = 2
-                        ";
+                SELECT 
+                    COUNT(*) as total
+                FROM
+                    employee
+                INNER JOIN
+                    itl_extracted_data ON employee.userId = itl_extracted_data.userId
+                INNER JOIN
+                    employee_role ON employee.userId = employee_role.userId
+                WHERE 
+                    employee_role.role_id = 2
+            ";
             $totalResult = $con->query($totalQuery);
             if (!$totalResult) {
                 die("Error executing query: " . $con->error);
@@ -53,22 +56,31 @@ include('./includes/topbar.php');
             $totalPages = ceil($totalRows / $limit);
 
             $sql = "
-                SELECT 
-                    employee.*, 
-                    employee_role.role_id, 
+                SELECT
+                    employee.employeeId, 
+                    employee.firstName, 
+                    employee.middleName, 
+                    employee.lastName, 
+                    itl_extracted_data.totalOverload, 
                     itl_extracted_data.id, 
-                    COALESCE(itl_extracted_data.designated, 'No Data') AS designated, 
-                    COALESCE(itl_extracted_data.totalOverload, 'No Data') AS totalOverload
-                FROM 
+                    employee_role.role_id,
+                    itl_extracted_data.designated, 
+	                itl_extracted_data.userId
+                FROM
                     employee
-                INNER JOIN 
-                    employee_role ON employee.userId = employee_role.userId
-                LEFT JOIN
-                    itl_extracted_data ON employee.userId = itl_extracted_data.userId
-                WHERE 
+                INNER JOIN
+                    itl_extracted_data
+                ON 
+                    employee.userId = itl_extracted_data.userId
+                INNER JOIN
+                    employee_role
+                ON 
+                    employee.userId = employee_role.userId
+                WHERE
                     employee_role.role_id = 2
                 LIMIT $limit OFFSET $offset
             ";
+
             $result = $con->query($sql);
 
             if (!$result) {
@@ -121,7 +133,7 @@ include('./includes/topbar.php');
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="importModalLabel">Import User Data</h5>
+        <h5 class="modal-title" id="importModalLabel">Import Individual Teacher's Load</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">

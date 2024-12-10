@@ -76,6 +76,13 @@ function previewImage(event) {
             document.getElementById('imagePreview').innerHTML = '';
         }
     }
+
+
+  document.getElementById('importForm').addEventListener('submit', function() {
+  var submitButton = document.getElementById('submitBtn');
+  submitButton.disabled = true;
+  submitButton.innerHTML = 'Submitting...'; // Optional: Change the button text
+});
 	</script>
 
 </html>
