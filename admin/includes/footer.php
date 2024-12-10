@@ -83,6 +83,8 @@ function previewImage(event) {
   submitButton.disabled = true;
   submitButton.innerHTML = 'Submitting...'; // Optional: Change the button text
 });
+
+
 	</script>
 
 </html>

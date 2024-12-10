@@ -21,7 +21,6 @@ if (!isset($_SESSION['auth'])) {
             break;
         }
     }
-
     if (!$hasAccess) {
         $_SESSION['status'] = "You are not authorized to access this page!";
         $_SESSION['status_code'] = "warning";

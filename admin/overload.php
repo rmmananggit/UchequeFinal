@@ -26,9 +26,9 @@
                     </a>
                 </li>
                 <li>
-                    <a href="user.php">
+                    <a href="user1.html">
                       <i class="bx bxs-group"></i>
-                      <span>user management</span>
+                      <span>usernames</span>
                     </a>
                 </li>
                 <li>
