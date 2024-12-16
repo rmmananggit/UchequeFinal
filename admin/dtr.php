@@ -21,8 +21,12 @@ include('./includes/topbar.php');
             <tr>
                 <th>ID</th>
                 <th>Name</th>
-                <th>Designation</th>
-                <th>Total Overload</th>
+                <th>Week 1</th>
+                <th>Week 2</th>
+                <th>Week 3</th>
+                <th>Week 4</th>
+                <th>Total</th>
+                <th>File Name</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -41,7 +45,7 @@ include('./includes/topbar.php');
                             INNER JOIN 
                                 employee_role ON employee.userId = employee_role.userId
                             LEFT JOIN
-                                itl_extracted_data ON employee.userId = itl_extracted_data.userId
+                                dtr_data ON employee.userId = dtr_data.userId
                             WHERE 
                                 employee_role.role_id = 2
                         ";
@@ -61,13 +65,13 @@ include('./includes/topbar.php');
                         employee.middleName, 
                         employee.lastName, 
                         employee_role.role_id, 
-                        dtr_extracted_data.*
+                        dtr_data.*
                     FROM
-                        dtr_extracted_data
+                        dtr_data
                         INNER JOIN
                         employee
                         ON 
-                            dtr_extracted_data.userId = employee.userId
+                            dtr_data.userId = employee.userId
                         INNER JOIN
                         employee_role
                         ON 
@@ -88,8 +92,12 @@ include('./includes/topbar.php');
                     echo '<tr>
                             <td>' . htmlspecialchars($row['employeeId']) . '</td>
                             <td>' . htmlspecialchars($fullName) . '</td>
-                            <td>' . htmlspecialchars($row['designated']) . '</td>
-                            <td>' . htmlspecialchars($row['totalOverload']) . '</td>
+                            <td>' . htmlspecialchars($row['week1']) . '</td>
+                                 <td>' . htmlspecialchars($row['week2']) . '</td>
+                                      <td>' . htmlspecialchars($row['week3']) . '</td>
+                                           <td>' . htmlspecialchars($row['week4']) . '</td>
+                                             <td>' . htmlspecialchars($row['total']) . '</td>
+                            <td>' . htmlspecialchars($row['fileName']) . '</td>
                             <td>
                                 <a href="edit-act.php?employee_id=' . htmlspecialchars($row['userId']) . '" class="action">Download</a>
                                 <a href="#1" class="action">Delete</a>
@@ -139,9 +147,10 @@ include('./includes/topbar.php');
             <select class="form-control" id="userId" name="userId" required>
               <option value="" disabled selected>---Select User---</option>
               <?php
-                $query = "SELECT employee.userId, employee.employeeId, employee.firstName, employee.middleName, employee.lastName 
-                          FROM employee 
-                          WHERE employee.userId = 2";
+              $query = "SELECT employee.userId, employee.employeeId, employee.firstName, employee.middleName, employee.lastName 
+              FROM employee 
+              INNER JOIN employee_role ON employee.userId = employee_role.userId
+              WHERE employee_role.role_id = 2";
                 $result = $con->query($query);
 
                 if ($result->num_rows > 0) {

@@ -8,7 +8,10 @@ if (isset($_POST['selected_role']) && in_array($_POST['selected_role'], $_SESSIO
     // Redirect based on the selected role
     switch ($selected_role) {
         case 'Admin':
+            $_SESSION['status'] = "Welcome " . $userData['firstName'] . ' ' . $userData['lastName'] . "!";
+            $_SESSION['status_code'] = "success";
             header("Location: ../admin/index.php");
+            exit();
             break;
         case 'Hr':
             header("Location: ../hr/h_dash.php");

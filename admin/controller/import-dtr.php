@@ -2,114 +2,102 @@
 session_start();
 require '../../vendor/autoload.php';
 use PhpOffice\PhpSpreadsheet\IOFactory;
+require '../../config/config.php';
 
-function saveWeeklySummaryToDatabase($filePath, $employeeName, $dbConnection) {
+// Check if file is uploaded and userId is provided
+if (isset($_FILES['file']) && $_FILES['file']['error'] == 0 && isset($_POST['userId'])) {
+    $userId = $_POST['userId'];
+    $file = $_FILES['file'];
+
+    // Validate file type
+    $allowedExts = ['xlsx'];
+    $fileExt = pathinfo($file['name'], PATHINFO_EXTENSION);
+    if (!in_array($fileExt, $allowedExts)) {
+        $_SESSION['status'] = "Invalid file type. Only .xlsx files are allowed.";
+        $_SESSION['status_code'] = "error";
+        header('Location: ../dtr.php');
+        exit;
+    }
+
+    // Load the Excel file
     try {
-        $spreadsheet = IOFactory::load($filePath);
-        $sheet = $spreadsheet->getActiveSheet();
+        $spreadsheet = IOFactory::load($file['tmp_name']);
 
-        $rows = $sheet->toArray(null, true, true, true);
-        $weeklyData = [];
-        $currentWeekStart = null;
-        $currentWeekTotal = 0;
+        // Assuming that the data is in the 3rd sheet (Table 3)
+        $sheet = $spreadsheet->getSheet(2); // Index starts from 0, so Sheet 3 is index 2
 
-        foreach ($rows as $row) {
-            if (empty($row['A']) || empty($row['G']) || !is_numeric($row['G'])) {
-                continue;
-            }
+        // Extract data from H4 to H34 (weekly data)
+        $weekData = [];
+        for ($row = 4; $row <= 34; $row++) {
+            $remarksCell = $sheet->getCell('L' . $row)->getValue();
+            $cellValue = $sheet->getCell('H' . $row)->getValue();
 
-            $date = \DateTime::createFromFormat('m/d/Y', $row['A']);
-            $total = floatval($row['G']);
+            // Convert time values with ':' to decimal format
+            $cellValue = str_replace(':', '.', $cellValue); // Replace ':' with '.'
 
-            if (!$date) {
-                continue;
-            }
-
-            $dayOfWeek = $date->format('N');
-
-            if ($dayOfWeek == 1) {
-                if ($currentWeekStart !== null) {
-                    $weeklyData[] = [
-                        'start' => $currentWeekStart,
-                        'end' => $date->modify('-1 day')->format('Y-m-d'),
-                        'total' => $currentWeekTotal
-                    ];
-                }
-                $currentWeekStart = $date->format('Y-m-d');
-                $currentWeekTotal = $total;
+            // Check if the remarks meet the condition
+            if (in_array($remarksCell, ["On Travel", "Holiday", "Health Break"])) {
+                $cellValue = 8; // Set to 8 hours if remarks match
             } else {
-                $currentWeekTotal += $total;
+                $cellValue = is_numeric($cellValue) ? round((float)$cellValue, 2) : 0; // Ensure numeric and round to 2 decimal places
             }
+            $weekData[] = $cellValue;
         }
 
-        if ($currentWeekStart !== null) {
-            $weeklyData[] = [
-                'start' => $currentWeekStart,
-                'end' => $date->format('Y-m-d'),
-                'total' => $currentWeekTotal
-            ];
-        }
+        // Extract the total from H35
+        $totalValue = $sheet->getCell('H35')->getValue();
+        $totalValue = str_replace(':', '.', $totalValue); // Replace ':' with '.'
+        $totalValue = round((float)$totalValue, 2); // Convert to float and round
 
-        foreach ($weeklyData as $week) {
-            $monthYear = date('Y-m', strtotime($week['start']));
+        // Divide the week data into 4 weeks
+        $week1 = round(array_sum(array_slice($weekData, 0, 7)), 2);  // Sum first 7 days for Week 1
+        $week2 = round(array_sum(array_slice($weekData, 7, 7)), 2);  // Sum next 7 days for Week 2
+        $week3 = round(array_sum(array_slice($weekData, 14, 7)), 2); // Sum next 7 days for Week 3
+        $week4 = round(array_sum(array_slice($weekData, 21, 7)), 2); // Sum next 7 days for Week 4
 
-            $stmt = $dbConnection->prepare("
-                INSERT INTO weekly_dtr_summary (employee_name, week_start, week_end, total_hours, month_year) 
-                VALUES (?, ?, ?, ?, ?)
-            ");
+        // Calculate overtime for each week
+        $otWeek1 = max(0, $week1 - 40);
+        $otWeek2 = max(0, $week2 - 40);
+        $otWeek3 = max(0, $week3 - 40);
+        $otWeek4 = max(0, $week4 - 40);
+        $otTotal = round($otWeek1 + $otWeek2 + $otWeek3 + $otWeek4, 2);
 
-            $stmt->bind_param(
-                "sssds",
-                $employeeName,
-                $week['start'],
-                $week['end'],
-                $week['total'],
-                $monthYear
-            );
-
-            $stmt->execute();
-        }
-    } catch (Exception $e) {
-        $_SESSION['status'] = 'Error processing file: ' . $e->getMessage();
-        $_SESSION['status_code'] = "error";
-        header('Location: ../dtr.php');
-        exit;
-    }
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
-    $uploadDir = '../../uploads/';
-    $dbConnection = new mysqli('localhost', 'username', 'password', 'database_name');
-
-    if ($dbConnection->connect_error) {
-        $_SESSION['status'] = 'Database connection failed: ' . $dbConnection->connect_error;
-        $_SESSION['status_code'] = "error";
-        header('Location: ../dtr.php');
-        exit;
-    }
-
-    foreach ($_FILES['files']['tmp_name'] as $index => $tmpName) {
-        $fileName = $_FILES['files']['name'][$index];
-        $employeeName = pathinfo($fileName, PATHINFO_FILENAME);
-        $filePath = $uploadDir . basename($fileName);
-
-        if (move_uploaded_file($tmpName, $filePath)) {
-            saveWeeklySummaryToDatabase($filePath, $employeeName, $dbConnection);
-        } else {
-            $_SESSION['status'] = 'Error uploading file: ' . $fileName;
+        // File upload path
+        $fileName = $file['name'];
+        $filePath = 'uploads/' . $fileName;
+        if (!move_uploaded_file($file['tmp_name'], '../../uploads/' . $fileName)) {
+            $_SESSION['status'] = "File upload failed.";
             $_SESSION['status_code'] = "error";
             header('Location: ../dtr.php');
             exit;
         }
-    }
 
-    $dbConnection->close();
-    $_SESSION['status'] = 'Data uploaded successfully!';
-    $_SESSION['status_code'] = "success";
-    header('Location: ../dtr.php');
-    exit;
+        // Insert into dtr_data table
+        $insertQuery = "INSERT INTO `dtr_data`(`userId`, `week1`, `week2`, `week3`, `week4`, `otWeek1`, `otWeek2`, `otWeek3`, `otWeek4`, `otTotal`, `total`, `filePath`, `fileName`) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $con->prepare($insertQuery);
+        $stmt->bind_param('iddddddddsdss', $userId, $week1, $week2, $week3, $week4, $otWeek1, $otWeek2, $otWeek3, $otWeek4, $otTotal, $totalValue, $filePath, $fileName);
+
+
+        // Execute the query and provide feedback
+        if ($stmt->execute()) {
+            $_SESSION['status'] = "Data imported successfully!";
+            $_SESSION['status_code'] = "success";
+        } else {
+            $_SESSION['status'] = "Failed to import data.";
+            $_SESSION['status_code'] = "error";
+        }
+
+        header('Location: ../dtr.php');
+        exit;
+    } catch (Exception $e) {
+        $_SESSION['status'] = "Error loading file: " . $e->getMessage();
+        $_SESSION['status_code'] = "error";
+        header('Location: ../dtr.php');
+        exit;
+    }
 } else {
-    $_SESSION['status'] = 'Invalid request.';
+    $_SESSION['status'] = "Please select a user and upload a file.";
     $_SESSION['status_code'] = "error";
     header('Location: ../dtr.php');
     exit;
